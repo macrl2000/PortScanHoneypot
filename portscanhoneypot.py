@@ -1,6 +1,6 @@
 #!/bin/env python3
 """
-portscanhoneypot:   
+portscanhoneypot:
 
 Simple honeypot to catch rogue port scans on the network for use as an early warning
 beacon of potential threat actors on the network.
@@ -62,9 +62,9 @@ class PortScanHoneyPot:
 
         # Setup optional webhook for notifications
         if settings.webhook and settings.webhook_type != WebHookType.NONE :
-            self.__webhook = WebHook(settings.webhook, settings.webhook_type)
+            self.__webhook = WebHook(settings.webhook, settings.webhook_type, settings.email, settings.sendmail)
         else:
-            self.__webhook = None  
+            self.__webhook = None
 
     @classmethod
     def print_banner(cls):
@@ -75,19 +75,19 @@ class PortScanHoneyPot:
 
     @classmethod
     def display_usage(cls):
-        print( 'sudo portscanhoneypot.py\n\t[-c /path/to/config.conf] [-d] [--daemon]\n' )       
-        
+        print( 'sudo portscanhoneypot.py\n\t[-c /path/to/config.conf] [-d] [--daemon]\n' )
+
     @classmethod
     def setup_logging(cls, log_level):
         if log_level is None:
-            logging.basicConfig( 
-                stream=sys.stdout, 
+            logging.basicConfig(
+                stream=sys.stdout,
                 level=log_level,
                 format='%(asctime)s [%(levelname)s] %(message)s',
                 datefmt='%m/%d/%Y %I:%M:%S %p' )
         else:
-            logging.basicConfig( 
-                filename="pshp_debug.log", 
+            logging.basicConfig(
+                filename="pshp_debug.log",
                 level=log_level,
                 format='%(asctime)s [%(levelname)s] %(message)s',
                 datefmt='%m/%d/%Y %I:%M:%S %p' )
@@ -99,7 +99,7 @@ class PortScanHoneyPot:
 
     def process_packet(self, packet, addr):
 
-        # Get Ethernet frame header        
+        # Get Ethernet frame header
         eth_header = packet[:ETH_HEADER_LEN]
 
         # Break out the ethernet frame
@@ -164,16 +164,16 @@ class PortScanHoneyPot:
                 #    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
                 t = iph_length + ETH_HEADER_LEN
-                
+
                 # Extract raw bytes of TCP header
                 tcp_header = packet[t:t+20]
 
                 # Unpack TCP header
-                tcph = unpack('!HHLLBBHHH' , tcp_header)                
+                tcph = unpack('!HHLLBBHHH' , tcp_header)
                 dest_port = tcph[1]
                 flags = tcph[5]
 
-                # We only want to monitor the interface IP for the listening ports... 
+                # We only want to monitor the interface IP for the listening ports...
                 # drop everything else
                 if d_addr in self.__listening_ips and dest_port in self.__listening_ports:
                     self.__process_scanner_packet(flags, s_addr, d_addr, dest_port)
@@ -198,16 +198,16 @@ class PortScanHoneyPot:
         scan_types_mapping = {
             0: 'TCP NULL',
             TH_FIN: 'TCP FIN',
-            TH_SYN: 'TCP SYN', 
+            TH_SYN: 'TCP SYN',
             TH_SYN|TH_RST: 'TCP SYN',
             TH_ACK: 'TCP ACK',
-            TH_URG|TH_PSH|TH_FIN: 'TCP XMAS', 
+            TH_URG|TH_PSH|TH_FIN: 'TCP XMAS',
             TH_URG|TH_PSH|TH_FIN|TH_ACK: 'TCP XMAS',
             TH_SYN|TH_FIN: 'TCP SYN/FIN',
             TH_FIN|TH_ACK: 'TCP FIN/ACK',
             TH_SYN|TH_ACK|TH_RST: 'TCP CONN',
-            TH_URG|TH_PSH|TH_ACK|TH_RST|TH_SYN|TH_FIN: 'TCP ALL-FLAGS' 
-        } 
+            TH_URG|TH_PSH|TH_ACK|TH_RST|TH_SYN|TH_FIN: 'TCP ALL-FLAGS'
+        }
 
         return scan_types_mapping.get(flags, 'unknown')
 
@@ -244,7 +244,7 @@ class PortScanHoneyPot:
 
         try:
             sock.bind((self.__iface, 0))
-        except OSError as err:            
+        except OSError as err:
             logging.exception(err)
             sys.exit("Bind failed. Aborting.")
         except Exception as ex:
@@ -254,7 +254,7 @@ class PortScanHoneyPot:
         while True:
             try:
                 packet, addr = sock.recvfrom(65535)
-                threading.Thread(target=self.process_packet, args=(packet, addr)).start()       
+                threading.Thread(target=self.process_packet, args=(packet, addr)).start()
             except KeyboardInterrupt:
                 if not self.__logfile.closed:
                     self.__logfile.close()
@@ -306,8 +306,8 @@ def main(argv):
     daemon = False
 
     try:
-        opts, args = getopt.getopt( argv, 
-            "hc:d", 
+        opts, args = getopt.getopt( argv,
+            "hc:d",
             ["help", "config=", "debug", "daemon"])
     except getopt.GetoptError as err:
         logging.exception(err)
@@ -330,3 +330,4 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+

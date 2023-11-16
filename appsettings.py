@@ -28,7 +28,7 @@ class AppSettings:
             self.__set_defaults()
 
         listening_ip = self.__get_ip_address(self.iface)
-        self.listening_ips.append( listening_ip )        
+        self.listening_ips.append( listening_ip )
 
         try:
             self.portscanlog = open(logfile,'a')
@@ -44,6 +44,8 @@ class AppSettings:
                 self.iface = self.__assign_value( settings, "iface", "eth0" )
                 self.listening_ports = self.__assign_value( settings, "ports", [8080] )
                 self.allowed_hosts = self.__assign_value( settings, "allowed_hosts", [] )
+                self.email = self.__assign_value( settings, "email", "" )
+                self.sendmail = self.__assign_value( settings, "sendmail", False )
 
                 if 'webhook_url' in settings:
                     url = settings['webhook_url']
@@ -52,6 +54,9 @@ class AppSettings:
                     if validators.url(url):
                         self.webhook = url
                         self.webhook_type = self.__assign_value( settings, "webhook_type", WebHookType.GENERIC )
+                    elif validators.email(url):
+                        self.webhook = url
+                        self.webhook_type = self.__assign_value( settings, "webhook_type", WebHookType.EMAIL )
                     else:
                         logging.warning( "Bad webhook URL. Disabling webhook support." )
                         self.webhook = None
@@ -63,7 +68,7 @@ class AppSettings:
                 logging.exception(exc)
                 self.__set_defaults()
 
-    def __assign_value(self, settings, key, default_val ):                
+    def __assign_value(self, settings, key, default_val ):
         if key in settings:
             val = settings[key]
         else:
@@ -84,3 +89,4 @@ class AppSettings:
             0x8915,  # SIOCGIFADDR
             pack('256s', bytes(ifname[:15], 'utf-8'))
         )[20:24])
+
