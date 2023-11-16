@@ -1,0 +1,33 @@
+apt install openvmtools
+apt install open-vm-tools
+apt install net-tools
+apt install python3 python3-pip vim git
+
+git clone https://github.com/macrl2000/PortScanHoneypot.git
+
+pip3 install requests
+pip3 install pymsteams
+pip3 install PyYAML
+pip3 install validators
+
+apt install tzdata
+dpkg-reconfigure tzdata
+
+apt install exim4
+dpkg-reconfigure exim4-config
+
+#apt install sendmail
+
+echo "Subject: hello" | sendmail xxx@yyy.com
+
+#pip3 install MIMEText
+#pip3 install email
+mailq
+rm /var/spool/mqueue/*
+mailq
+
+vi /etc/systemd/system/honeypot.service
+systemctl enable honeypot
+systemctl start honeypot
+systemctl status honeypot
+

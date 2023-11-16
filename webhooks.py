@@ -51,8 +51,8 @@ class WebHook:
             msg["From"] = f"{username}@{hn}"
             msg["To"] = self.email
             msg["Subject"] = f"[{hn}] Honeypot Triggered!"
-            p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE) # for plain sendmail mta
-            #p = Popen(["/usr/sbin/sendmail", self.email], stdin=PIPE) # for exim with smarthost
+            #p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE) # for plain sendmail mta
+            p = Popen(["/usr/sbin/sendmail", self.email], stdin=PIPE) # for exim with smarthost
             p.communicate(msg.as_bytes())
             if not p.returncode == 0:
                 logging.debug( "Failed to send notification via sendmail. Return code: {0}".format(p.returncode))
