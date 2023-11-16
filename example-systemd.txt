@@ -1,0 +1,18 @@
+# /etc/systemd/system/honeypot.service
+[Unit]
+Description=start the honeypot
+Wants=network-online.target
+After=syslog.target network.target nss-lookup.target network-online.target
+
+[Service]
+Environment="LD_LIBRARY_PATH=./linux64"
+ExecStart=/root/PortScanHoneypot/portscanhoneypot.py -c /root/PortScanHoneypot/pshp.conf
+User=root
+Group=root
+
+StandardOutput=journal
+Restart=on-failure
+WorkingDirectory=/root/PortScanHoneypot/
+
+[Install]
+WantedBy=multi-user.target
