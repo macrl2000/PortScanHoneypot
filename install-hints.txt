@@ -32,3 +32,4 @@ systemctl enable honeypot
 systemctl start honeypot
 systemctl status honeypot
 
+nmap -p 88 --max-retries 0 192.168.1.42
