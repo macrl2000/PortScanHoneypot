@@ -46,6 +46,11 @@ class AppSettings:
                 self.allowed_hosts = self.__assign_value( settings, "allowed_hosts", [] )
                 self.email = self.__assign_value( settings, "email", "" )
                 self.sendmail = self.__assign_value( settings, "sendmail", False )
+                self.smarthost = self.__assign_value( settings, "smarthost",  "" )
+                self.mail_user = self.__assign_value( settings, "mail_user",  "" )
+                self.mail_pass = self.__assign_value( settings, "mail_pass",  "" )
+                self.mail_port = self.__assign_value( settings, "mail_port",  25 )
+                self.use_ssl = self.__assign_value( settings, "use_ssl", False )
 
                 if 'webhook_url' in settings:
                     url = settings['webhook_url']
@@ -63,7 +68,8 @@ class AppSettings:
                         self.webhook_type = WebHookType.NONE
                 else:
                     self.webhook = None
-                    self.webhook_type = WebHookType.NONE
+                    self.webhook_type = self.__assign_value( settings, "webhook_type", WebHookType.NONE )
+
             except yaml.YAMLError as exc:
                 logging.exception(exc)
                 self.__set_defaults()

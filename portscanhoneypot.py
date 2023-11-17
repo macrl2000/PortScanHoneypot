@@ -61,8 +61,8 @@ class PortScanHoneyPot:
         self.__logfile = settings.portscanlog
 
         # Setup optional webhook for notifications
-        if settings.webhook and settings.webhook_type != WebHookType.NONE :
-            self.__webhook = WebHook(settings.webhook, settings.webhook_type, settings.email, settings.sendmail)
+        if settings.webhook_type != WebHookType.NONE :
+            self.__webhook = WebHook(settings.webhook, settings.webhook_type, settings.email, settings.sendmail, settings.smarthost, settings.mail_port, settings.mail_user, settings.mail_pass, settings.use_ssl)
         else:
             self.__webhook = None
 
@@ -175,12 +175,14 @@ class PortScanHoneyPot:
 
                 # We only want to monitor the interface IP for the listening ports...
                 # drop everything else
+
                 if d_addr in self.__listening_ips and dest_port in self.__listening_ports:
                     self.__process_scanner_packet(flags, s_addr, d_addr, dest_port)
 
     # Process scanner packets tripped up by the honeypot
     def __process_scanner_packet(self, flags, s_addr, d_addr, d_port):
         # We want to make sure we drop packets from allowed hosts (ie: RMM/NM/Network scanners etc)
+        
         if s_addr not in self.__allowed_hosts:
             scan_type = self.get_scan_type(flags)
             flags_str = self.get_flags(flags)

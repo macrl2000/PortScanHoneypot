@@ -25,6 +25,7 @@ echo "Subject: hello" | sendmail xxx@yyy.com
 mailq
 rm /var/spool/mqueue/*
 mailq
+exim -Mrm {message-id}
 
 vi /etc/systemd/system/honeypot.service
 systemctl enable honeypot

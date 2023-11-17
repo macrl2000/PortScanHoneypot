@@ -8,7 +8,9 @@ import os
 import sys
 import socket
 from email.mime.text import MIMEText
+import email.utils 
 from subprocess import Popen, PIPE
+import smtplib, ssl
 
 username="honeypot"
 
@@ -18,16 +20,21 @@ class WebHookType(IntEnum):
     SLACK = 2
     TEAMS = 3
     DISCORD = 4
-    EMAIL = 5
+    EMAIL_ONLY = 5
 
 class WebHook:
     DEFAULT_HEADERS = {'Content-Type': 'application/json'}
 
-    def __init__(self, url, hooktype=WebHookType.GENERIC, email="", sendmail = False):
+    def __init__(self, url, hooktype=WebHookType.GENERIC, email="", sendmail = False, smarthost = "", mail_port = 25, mail_user = "", mail_pass = "", use_ssl = False):
         self.url = url
         self.hooktype = hooktype
         self.email = email
         self.sendmail = sendmail
+        self.smarthost = smarthost
+        self.mail_user = mail_user
+        self.mail_pass = mail_pass
+        self.mail_port = mail_port
+        self.use_ssl = use_ssl
 
     def notify(self, message):
         if message:
@@ -40,6 +47,7 @@ class WebHook:
                 self.__send_to_teams(message)
             elif self.hooktype == WebHookType.DISCORD:
                 self.__send_to_discord(message)
+
             if self.sendmail:
                 self.__send_to_email(message)
 
@@ -48,14 +56,38 @@ class WebHook:
         try:
             hn = socket.gethostname()
             msg = MIMEText(message)
-            msg["From"] = f"{username}@{hn}"
-            msg["To"] = self.email
+
             msg["Subject"] = f"[{hn}] Honeypot Triggered!"
-            #p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE) # for plain sendmail mta
-            p = Popen(["/usr/sbin/sendmail", self.email], stdin=PIPE) # for exim with smarthost
-            p.communicate(msg.as_bytes())
-            if not p.returncode == 0:
-                logging.debug( "Failed to send notification via sendmail. Return code: {0}".format(p.returncode))
+            msg["To"] = self.email
+
+            if len(self.mail_user) == 0: 
+                self.mail_user = f"{username}@{hn}"
+
+            msg["From"] = self.mail_user
+            msg["Sender"] = self.mail_user
+            msg["Date"] = email.utils.formatdate(localtime=True)
+ 
+            # use specified server
+            if len(self.smarthost):
+                if self.use_ssl:
+                    context = ssl.create_default_context()
+                    with smtplib.SMTP_SSL(self.smarthost, self.mail_port, context = context) as server:
+                        if len(self.mail_pass):
+                             server.login(self.mail_user, self.mail_pass)
+                        server.sendmail(self.mail_user, self.email, msg.as_bytes())
+                else:
+                    with smtplib.SMTP(self.smarthost, self.mail_port) as server:
+                        if len(self.mail_pass):
+                             server.login(self.mail_user, self.mail_pass)
+                        server.sendmail(self.mail_user, self.email, msg.as_bytes())
+            # use MX
+            else:
+                #p = Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=PIPE) # for plain sendmail mta
+                p = Popen(["/usr/sbin/sendmail", self.email], stdin=PIPE) # for exim 
+                p.communicate(msg.as_bytes())
+                if not p.returncode == 0:
+                    logging.debug( "Failed to send notification via sendmail. Return code: {0}".format(p.returncode))
+
         except Exception as e:
             logging.exception(e)
 
